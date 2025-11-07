@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PopOut | Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+    input, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #2b72ff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d5be0;
+    }
+    #message {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Register</h2><span>or <a href="{% url 'login_page' %}">Login?</a></span>
+    <input type="email" id="email" placeholder="Enter your email" required />
+    <input type="password" id="password" placeholder="Enter your password" required />
+    <button onclick="register()">Send OTP</button>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("access_token");
+
+    // If logged in, redirect away from login/register/OTP pages
+    if (token) {
+        window.location.href = "/"; // redirect to home page
+    }
+    async function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const msg = document.getElementById("message");
+
+      msg.innerText = "Sending OTP...";
+
+      const res = await fetch("/api/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        msg.style.color = "green";
+        msg.innerText = data.message + "\nRedirecting to OTP page...";
+        setTimeout(() => {
+          window.location.href = `/verify_otp?email=${encodeURIComponent(email)}`;
+        }, 1500);
+      } else {
+        msg.style.color = "red";
+        msg.innerText = data.error || JSON.stringify(data);
+      }
+    }
+  </script>
+</body>
+</html>

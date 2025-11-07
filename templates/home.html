@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PopOut | Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; margin: 0; background: #f2f4f8; color: #333; }
+    /* Top User Bar */
+    .user-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+    .user-info { display: flex; align-items: center; gap: 10px;}
+    .user-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
+    .username { font-weight: 600; font-size: 16px;}
+    .settings-icon { font-size: 22px; cursor: pointer; color: #666; transition: transform 0.2s;}
+    .settings-icon:hover { transform: rotate(20deg);}
+    /* Tabs */
+    .tabs { display: flex; justify-content: center; background: #fff; margin-top: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; max-width: 500px; margin-left:auto; margin-right:auto;}
+    .tab { flex: 1; text-align: center; padding: 12px 0; cursor: pointer; font-weight:600; transition: background 0.3s, color 0.3s;}
+    .tab.active { background: #2b72ff; color: #fff;}
+    /* Container */
+    .container { max-width: 900px; margin: 20px auto; padding: 0 15px;}
+    .section { display: none;}
+    .section.active { display: block;}
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px;}
+    .card h3 { margin-top:0; margin-bottom:15px; font-weight:600; color:#2b72ff;}
+    .card input, .card textarea { width:100%; padding:10px; margin-bottom:12px; border-radius:8px; border:1px solid #ccc; font-size:14px; resize:none;}
+    .card button { background:#2b72ff; color:#fff; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:600; transition: background 0.3s;}
+    .card button:hover { background:#1d5be0;}
+    .event-item { background:#f9f9f9; padding:12px 15px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 6px rgba(0,0,0,0.03);}
+    .event-item button { padding:6px 10px; font-size:13px;}
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100;}
+    .modal-overlay.active { display:flex;}
+    .modal { background:#fff; padding:30px; border-radius:12px; width:100%; max-width:400px; position:relative; text-align:center;}
+    .modal h3 { margin-top:0; color:#2b72ff;}
+    .close-modal { position:absolute; top:15px; right:20px; cursor:pointer; font-weight:bold; font-size:20px; color:#666;}
+    /* Notifications Popup */
+    .notification-popup { position:fixed; top:20px; right:20px; background:#2b72ff; color:#fff; padding:15px 20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.2); display:flex; justify-content:space-between; align-items:center; min-width:250px; margin-bottom:10px; }
+    .notification-popup button { background:#fff; color:#2b72ff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:600; margin-left:10px;}
+  </style>
+</head>
+<body>
+
+  <!-- User bar -->
+  <div class="user-bar">
+    <div class="user-info">
+      <img src="https://via.placeholder.com/40" alt="Profile" id="profilePreview">
+      <span class="username" id="usernameDisplay">John Doe</span>
+    </div>
+    <span class="settings-icon" id="settingsBtn">&#9881;</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="nearbyTab">Nearby Events</div>
+    <div class="tab" id="myTab">My Events</div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- Nearby Events -->
+    <div id="nearbySection" class="section active">
+      <div class="card">
+        <h3>Nearby Events</h3>
+        <div class="event-item">Jog in Park<button>Request to Join</button></div>
+        <div class="event-item">Coffee Meetup<button>Request to Join</button></div>
+      </div>
+    </div>
+
+    <!-- My Events -->
+    <div id="mySection" class="section">
+      <div class="card">
+        <h3>Create Event</h3>
+        <form id="createEventForm">
+          <input type="text" placeholder="Event Title" required>
+          <input type="text" placeholder="Location" required>
+          <textarea placeholder="Description" rows="3"></textarea>
+          <button type="submit">Create Event</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>My Events</h3>
+        <div class="event-item">Coffee Meetup - 12:00 PM</div>
+        <div class="event-item">Jog in Park - 06:00 PM</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h3>Account Settings</h3>
+      <img src="https://via.placeholder.com/80" id="modalProfilePreview">
+      <button onclick="alert('Viewing profile!')">View Profile</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Notifications Container -->
+  <div id="notificationsContainer"></div>
+
+  <script>
+    const token = localStorage.getItem("access_token");
+    if (!token) { window.location.href="/login"; }
+
+    async function logout(){
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      window.location.href="/login";
+    }
+
+    // Tab toggle
+    const nearbyTab = document.getElementById("nearbyTab");
+    const myTab = document.getElementById("myTab");
+    const nearbySection = document.getElementById("nearbySection");
+    const mySection = document.getElementById("mySection");
+
+    nearbyTab.addEventListener("click", () => {
+      nearbyTab.classList.add("active"); myTab.classList.remove("active");
+      nearbySection.classList.add("active"); mySection.classList.remove("active");
+    });
+    myTab.addEventListener("click", () => {
+      myTab.classList.add("active"); nearbyTab.classList.remove("active");
+      mySection.classList.add("active"); nearbySection.classList.remove("active");
+    });
+
+    // Settings modal
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsModal = document.getElementById("settingsModal");
+    const closeModal = document.getElementById("closeModal");
+    const profilePreview = document.getElementById("profilePreview");
+    const modalProfilePreview = document.getElementById("modalProfilePreview");
+
+    settingsBtn.addEventListener("click", () => settingsModal.classList.add("active"));
+    closeModal.addEventListener("click", () => settingsModal.classList.remove("active"));
+    settingsModal.addEventListener("click", e => { if(e.target===settingsModal) settingsModal.classList.remove("active"); });
+
+    // Profile image preview
+    const profileImageInput = document.getElementById("profileImage");
+    if(profileImageInput){
+      profileImageInput.addEventListener("change", function(){
+        const file=this.files[0];
+        if(file){
+          const reader=new FileReader();
+          reader.onload=function(e){ modalProfilePreview.src=e.target.result; profilePreview.src=e.target.result; }
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Notifications system
+    const notificationsContainer = document.getElementById("notificationsContainer");
+
+    function showNotification(message, id){
+      const notif = document.createElement("div");
+      notif.className = "notification-popup";
+      notif.id = "notif-"+id;
+      notif.innerHTML = `<span>${message}</span><button onclick="markAsSeen('${id}')">Mark as seen</button>`;
+      notificationsContainer.appendChild(notif);
+      setTimeout(()=>{ if(notif.parentNode) notif.parentNode.removeChild(notif); }, 15000);
+    }
+
+    function markAsSeen(id){
+      const notif = document.getElementById("notif-"+id);
+      if(notif) notif.remove();
+      // TODO: mark as seen in backend
+    }
+
+    // Example notifications fetch
+    const sampleNotifications = [
+      {id:1, message:"John requested to join your Coffee Meetup"},
+      {id:2, message:"Alice requested to join your Jog in Park"}
+    ];
+    sampleNotifications.forEach(n => showNotification(n.message, n.id));
+
+  </script>
+</body>
+</html>

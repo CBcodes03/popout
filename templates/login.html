@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PopOut | Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { background: white; padding: 2rem; border-radius: 10px; width: 300px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, button { width: 100%; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { background: #2b72ff; color: white; cursor: pointer; }
+    button:hover { background: #1d5be0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Login</h2><span>or <a href="{% url 'register_page' %}">Register?</a></span>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("access_token");
+
+    // If logged in, redirect away from login/register/OTP pages
+    if (token) {
+        window.location.href = "/"; // redirect to home page
+    }
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const msg = document.getElementById("message");
+
+      msg.innerText = "Logging in...";
+
+      const res = await fetch("/api/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        msg.style.color = "green";
+        msg.innerText = data.message;
+
+        // Store tokens in localStorage
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
+      } else {
+        msg.style.color = "red";
+        msg.innerText = data.error || "Login failed";
+      }
+    }
+  </script>
+</body>
+</html>
