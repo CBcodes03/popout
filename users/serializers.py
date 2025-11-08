@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import Event, EventJoinRequest, Notification
+
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -30,3 +32,28 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "email": user.email,
             },
         }
+    
+class EventSerializer(serializers.ModelSerializer):
+    organizer_username = serializers.CharField(source='organizer.username', read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ['id', 'title', 'description', 'lat', 'lon', 'start_time', 'end_time', 'organizer', 'organizer_username']
+        read_only_fields = ['organizer']
+
+# Serializer for EventJoinRequest model
+class EventJoinRequestSerializer(serializers.ModelSerializer):
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    user_username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = EventJoinRequest
+        fields = ['id', 'event', 'event_title', 'user', 'user_username', 'status']
+        read_only_fields = ['status', 'user']
+
+# Serializer for Notification model
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'message', 'seen', 'created_at']
+        read_only_fields = ['user', 'created_at']

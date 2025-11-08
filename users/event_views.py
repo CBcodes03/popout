@@ -3,12 +3,16 @@ from rest_framework.response import Response
 from .models import Event, EventJoinRequest, Notification
 from .serializers import EventSerializer, EventJoinRequestSerializer
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from geopy.distance import geodesic
 
 
 # Create Event
 class EventCreateView(generics.CreateAPIView):
     serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(organizer=self.request.user)
@@ -16,7 +20,7 @@ class EventCreateView(generics.CreateAPIView):
 # Send Join Request
 class EventJoinRequestView(generics.CreateAPIView):
     serializer_class = EventJoinRequestSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, event_id):
         event = Event.objects.get(id=event_id)
@@ -36,7 +40,7 @@ class EventJoinRequestView(generics.CreateAPIView):
 
 # Accept/Reject Join Request
 class RespondJoinRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, request_id):
         action = request.data.get("action")  # 'accept' or 'reject'
@@ -69,3 +73,43 @@ def nearby_events(user_location, max_distance_km=5):
         if distance <= max_distance_km:
             nearby.append(e)
     return nearby
+
+
+User = get_user_model()
+
+class UpdateLocationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        location = request.data.get("location")
+        if not location:
+            return Response({"detail": "No location provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        user.location = location
+        user.save()
+        return Response({"message": "Location updated successfully"}, status=status.HTTP_200_OK)
+
+class NearbyEventsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not user.location:
+            return Response({"detail": "User location not set"}, status=400)
+
+        try:
+            lat, lon = map(float, user.location.split(","))
+        except ValueError:
+            return Response({"detail": "Invalid user location format"}, status=400)
+
+        max_distance_km = float(request.query_params.get("max_distance", 5))
+        nearby = []
+        for event in Event.objects.all():
+            if event.lat and event.lon:
+                distance = geodesic((lat, lon), (event.lat, event.lon)).km
+                if distance <= max_distance_km:
+                    nearby.append(event)
+
+        serializer = EventSerializer(nearby, many=True)
+        return Response(serializer.data, status=200)
