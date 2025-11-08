@@ -38,9 +38,12 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'description', 'lat', 'lon', 'start_time', 'end_time', 'organizer', 'organizer_username']
+        fields = [
+            'id', 'title', 'description', 'location_name', 'lat', 'lon',
+            'join_expiry_minutes', 'start_time', 'end_time',
+            'max_participants', 'organizer', 'organizer_username'
+        ]
         read_only_fields = ['organizer']
-
 # Serializer for EventJoinRequest model
 class EventJoinRequestSerializer(serializers.ModelSerializer):
     event_title = serializers.CharField(source='event.title', read_only=True)

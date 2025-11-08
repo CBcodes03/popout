@@ -11,11 +11,30 @@ from geopy.distance import geodesic
 
 # Create Event
 class EventCreateView(generics.CreateAPIView):
+    """
+    Allows authenticated users to create events.
+    Automatically sets organizer to the logged-in user.
+    """
     serializer_class = EventSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(organizer=self.request.user)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            event = serializer.save(organizer=request.user)
+
+            # If start_time not provided, compute from join_expiry_minutes
+            if not event.start_time:
+                event.start_time = timezone.now() + timedelta(minutes=event.join_expiry_minutes)
+                event.save()
+
+            return Response({
+                "message": "Event created successfully",
+                "event": EventSerializer(event).data
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Send Join Request
 class EventJoinRequestView(generics.CreateAPIView):
