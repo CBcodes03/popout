@@ -84,3 +84,40 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message[:20]}"
+
+# --------------------------
+# Chat Group Model
+# --------------------------
+class ChatGroup(models.Model):
+    event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name="chat_group")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Chat for {self.event.title}"
+    
+    @property
+    def members(self):
+        """Get all members of this chat group (organizer + accepted participants)"""
+        members = [self.event.organizer]
+        accepted_requests = EventJoinRequest.objects.filter(
+            event=self.event, 
+            status="accepted"
+        )
+        for req in accepted_requests:
+            members.append(req.user)
+        return members
+
+# --------------------------
+# Chat Message Model
+# --------------------------
+class ChatMessage(models.Model):
+    chat_group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE, related_name="messages")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages")
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.chat_group.event.title}: {self.message[:30]}"

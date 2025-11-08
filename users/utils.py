@@ -23,7 +23,7 @@ def send_vmail(otp, emailid):
     s.quit()
 
 OTP_STORE = {}  # {email: {"otp": "123456", "timestamp": 1234567.0, "password": "userpass"}}
-OTP_EXPIRY_SECONDS = 30
+OTP_EXPIRY_SECONDS = 300
 
 def store_otp(email, otp, password):
     OTP_STORE[email] = {"otp": otp, "timestamp": time.time(), "password": password}

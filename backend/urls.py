@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import register_page, verify_page, login_page, home_page
 
 urlpatterns = [
@@ -30,4 +32,8 @@ urlpatterns = [
     # API routes
     path('api/', include('users.urls')),
 ]
+
+# Serve static files during development
+if settings.DEBUG and settings.STATICFILES_DIRS:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
 

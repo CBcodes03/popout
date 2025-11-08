@@ -3,40 +3,738 @@
 <head>
   <meta charset="UTF-8">
   <title>PopOut | Home</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/images/logo.png">
+  <link rel="shortcut icon" type="image/png" href="/static/images/logo.png">
+  <link rel="apple-touch-icon" href="/static/images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; margin: 0; background: #f2f4f8; color: #333; }
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+
+    body { 
+      font-family: 'Inter', sans-serif; 
+      margin: 0; 
+      background: #0a0a0f;
+      background-attachment: fixed;
+      color: #f3f4f6;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     /* Top User Bar */
-    .user-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
-    .user-info { display: flex; align-items: center; gap: 10px;}
-    .user-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
-    .username { font-weight: 600; font-size: 16px;}
-    .settings-icon { font-size: 22px; cursor: pointer; color: #666; transition: transform 0.2s;}
-    .settings-icon:hover { transform: rotate(20deg);}
+    .user-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 18px 30px; 
+      background: rgba(18, 18, 23, 0.95);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-info { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px;
+    }
+    
+    .user-info .logo { 
+      width: 64px; 
+      height: 64px; 
+      object-fit: contain;
+      border-radius: 10px;
+    }
+    
+    .user-info .profile-img { 
+      width: 44px; 
+      height: 44px; 
+      border-radius: 50%; 
+      object-fit: cover;
+      border: 2px solid rgba(99, 102, 241, 0.3);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+    }
+    
+    .username { 
+      font-weight: 600; 
+      font-size: 17px;
+      color: #f3f4f6;
+    }
+    
+    .settings-icon { 
+      font-size: 24px; 
+      cursor: pointer; 
+      color: #818cf8;
+      transition: all 0.3s;
+      padding: 8px;
+      border-radius: 50%;
+    }
+    
+    .settings-icon:hover { 
+      transform: rotate(90deg);
+      background: rgba(99, 102, 241, 0.2);
+      color: #a78bfa;
+    }
+
     /* Tabs */
-    .tabs { display: flex; justify-content: center; background: #fff; margin-top: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; max-width: 500px; margin-left:auto; margin-right:auto;}
-    .tab { flex: 1; text-align: center; padding: 12px 0; cursor: pointer; font-weight:600; transition: background 0.3s, color 0.3s;}
-    .tab.active { background: #2b72ff; color: #fff;}
+    .tabs { 
+      display: flex; 
+      justify-content: center; 
+      background: rgba(18, 18, 23, 0.95);
+      backdrop-filter: blur(20px);
+      margin: 20px auto; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px; 
+      overflow: hidden; 
+      max-width: 500px;
+      padding: 4px;
+      gap: 4px;
+    }
+    
+    .tab { 
+      flex: 1; 
+      text-align: center; 
+      padding: 14px 0; 
+      cursor: pointer; 
+      font-weight: 600;
+      transition: all 0.3s;
+      border-radius: 12px;
+      color: #9ca3af;
+      position: relative;
+    }
+    
+    .tab.active { 
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
     /* Container */
-    .container { max-width: 900px; margin: 20px auto; padding: 0 15px;}
-    .section { display: none;}
-    .section.active { display: block;}
-    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px;}
-    .card h3 { margin-top:0; margin-bottom:15px; font-weight:600; color:#2b72ff;}
-    .card input, .card textarea { width:100%; padding:10px; margin-bottom:12px; border-radius:8px; border:1px solid #ccc; font-size:14px; resize:none;}
-    .card button { background:#2b72ff; color:#fff; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:600; transition: background 0.3s;}
-    .card button:hover { background:#1d5be0;}
-    .event-item { background:#f9f9f9; padding:12px 15px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 6px rgba(0,0,0,0.03);}
-    .event-item button { padding:6px 10px; font-size:13px;}
+    .container { 
+      max-width: 900px; 
+      margin: 20px auto; 
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .section { 
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+    
+    .section.active { 
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .card { 
+      background: rgba(18, 18, 23, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px; 
+      padding: 28px; 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .card h3 { 
+      margin-top: 0; 
+      margin-bottom: 20px; 
+      font-weight: 700;
+      font-size: 22px;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .card input, .card textarea { 
+      width: 100%; 
+      padding: 14px 16px; 
+      margin-bottom: 16px; 
+      border-radius: 12px; 
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      font-size: 15px; 
+      resize: none;
+      transition: all 0.3s;
+      background: rgba(30, 30, 40, 0.8);
+      color: #f3f4f6;
+    }
+    
+    .card input::placeholder, .card textarea::placeholder {
+      color: #6b7280;
+    }
+    
+    .card label {
+      color: #9ca3af;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    
+    .card input[type="datetime-local"] {
+      color-scheme: dark;
+    }
+    
+    .card input:focus, .card textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+      background: rgba(30, 30, 40, 1);
+    }
+    
+    .card button { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; 
+      border: none; 
+      padding: 14px 24px; 
+      border-radius: 12px; 
+      cursor: pointer; 
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .card button:hover::before {
+      left: 100%;
+    }
+    
+    .card button:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+    
+    .card button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Event items */
+    .event-item { 
+      background: rgba(30, 30, 40, 0.8);
+      padding: 18px 20px; 
+      margin-bottom: 12px; 
+      border-radius: 14px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s;
+      color: #f3f4f6;
+    }
+    
+    .event-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+      border-color: rgba(99, 102, 241, 0.3);
+      background: rgba(30, 30, 40, 1);
+    }
+    
+    .event-item button { 
+      padding: 10px 18px; 
+      font-size: 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .event-item button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
     /* Modal */
-    .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100;}
-    .modal-overlay.active { display:flex;}
-    .modal { background:#fff; padding:30px; border-radius:12px; width:100%; max-width:400px; position:relative; text-align:center;}
-    .modal h3 { margin-top:0; color:#2b72ff;}
-    .close-modal { position:absolute; top:15px; right:20px; cursor:pointer; font-weight:bold; font-size:20px; color:#666;}
+    .modal-overlay { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      justify-content: center; 
+      align-items: center; 
+      z-index: 100;
+      animation: fadeIn 0.3s;
+    }
+    
+    .modal-overlay.active { 
+      display: flex;
+    }
+    
+    .modal { 
+      background: rgba(18, 18, 23, 0.98);
+      backdrop-filter: blur(20px);
+      padding: 40px; 
+      border-radius: 24px; 
+      width: 100%; 
+      max-width: 420px; 
+      position: relative; 
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      animation: slideUp 0.4s ease-out;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f3f4f6;
+    }
+    
+    .modal img {
+      border-radius: 50%;
+      margin: 20px 0;
+      border: 2px solid rgba(99, 102, 241, 0.3);
+    }
+    
+    .modal button {
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 8px;
+    }
+    
+    .modal button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    .modal h3 { 
+      margin-top: 0; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .modal button {
+      margin: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .close-modal { 
+      position: absolute; 
+      top: 20px; 
+      right: 24px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      font-size: 28px; 
+      color: #9ca3af;
+      transition: all 0.3s;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    
+    .close-modal:hover {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      transform: rotate(90deg);
+    }
+
     /* Notifications Popup */
-    .notification-popup { position:fixed; top:20px; right:20px; background:#2b72ff; color:#fff; padding:15px 20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.2); display:flex; justify-content:space-between; align-items:center; min-width:250px; margin-bottom:10px; }
-    .notification-popup button { background:#fff; color:#2b72ff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:600; margin-left:10px;}
+    .notification-popup { 
+      position: fixed; 
+      top: 20px; 
+      right: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; 
+      padding: 18px 24px; 
+      border-radius: 16px; 
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      min-width: 280px; 
+      margin-bottom: 12px;
+      animation: slideInRight 0.4s ease-out;
+      z-index: 200;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .notification-popup button { 
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff; 
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 16px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      margin-left: 12px;
+      transition: all 0.3s;
+      font-size: 13px;
+    }
+    
+    .notification-popup button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+    
+    #map {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      margin-top: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .accept-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      margin-right: 8px;
+    }
+    
+    .reject-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .distance-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .distance-selector label {
+      color: #9ca3af;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .distance-selector select {
+      flex: 1;
+      min-width: 150px;
+      padding: 10px 14px;
+      background: rgba(30, 30, 40, 0.8);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #f3f4f6;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .distance-selector select:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: rgba(30, 30, 40, 1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    .distance-selector select option {
+      background: rgba(18, 18, 23, 0.95);
+      color: #f3f4f6;
+      padding: 10px;
+    }
+    
+    /* Chat Styles */
+    .chat-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 380px;
+      max-height: 600px;
+      background: rgba(18, 18, 23, 0.98);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    
+    .chat-container.active {
+      display: flex;
+    }
+    
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chat-header h4 {
+      margin: 0;
+      color: #f3f4f6;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .chat-close {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    
+    .chat-close:hover {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+    }
+    
+    .chat-groups-list {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    
+    .chat-group-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: rgba(30, 30, 40, 0.8);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .chat-group-item:hover {
+      background: rgba(30, 30, 40, 1);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .chat-group-item.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: #6366f1;
+    }
+    
+    .chat-group-item h5 {
+      margin: 0 0 4px 0;
+      color: #f3f4f6;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .chat-group-item p {
+      margin: 0;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 300px;
+      max-height: 400px;
+    }
+    
+    .chat-message {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .chat-message.own {
+      align-items: flex-end;
+    }
+    
+    .chat-message.other {
+      align-items: flex-start;
+    }
+    
+    .chat-message-bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+    
+    .chat-message.own .chat-message-bubble {
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+    }
+    
+    .chat-message.other .chat-message-bubble {
+      background: rgba(30, 30, 40, 0.8);
+      color: #f3f4f6;
+    }
+    
+    .chat-message-user {
+      font-size: 11px;
+      color: #9ca3af;
+      padding: 0 4px;
+    }
+    
+    .chat-input-container {
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      gap: 8px;
+    }
+    
+    .chat-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: rgba(30, 30, 40, 0.8);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #f3f4f6;
+      font-size: 14px;
+    }
+    
+    .chat-input:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: rgba(30, 30, 40, 1);
+    }
+    
+    .chat-send-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .chat-send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    
+    .chat-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      z-index: 999;
+      transition: all 0.3s;
+    }
+    
+    .chat-toggle-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6);
+    }
+    
+    #eventsMap {
+      height: 300px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      margin-top: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
   </style>
 </head>
 <body>
@@ -44,8 +742,8 @@
   <!-- User bar -->
   <div class="user-bar">
     <div class="user-info">
-      <img src="https://via.placeholder.com/40" alt="Profile" id="profilePreview">
-      <span class="username" id="usernameDisplay">John Doe</span>
+      <img src="/static/images/logo.png" alt="PopOut Logo" class="logo" id="logoImg">
+      <span class="username" id="usernameDisplay"> <span id="currentUsername">Loading...</span></span>
     </div>
     <span class="settings-icon" id="settingsBtn">&#9881;</span>
   </div>
@@ -63,13 +761,40 @@
     <div id="nearbySection" class="section active">
       <div class="card">
         <h3>Nearby Events</h3>
+        <div class="distance-selector">
+          <label for="distanceSelect">Search Radius:</label>
+          <select id="distanceSelect">
+            <option value="1">1 km</option>
+            <option value="2">2 km</option>
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+            <option value="15">15 km</option>
+            <option value="20">20 km</option>
+            <option value="25">25 km</option>
+            <option value="30">30 km</option>
+            <option value="40">40 km</option>
+            <option value="50">50 km</option>
+            <option value="70" selected>70 km</option>
+            <option value="100">100 km</option>
+          </select>
+        </div>
         <button id="fetchEventsBtn">Fetch Nearby Events</button>
+        <div id="eventsMap" style="display: none;"></div>
         <div id="eventsContainer"></div>
       </div>
     </div>
 
     <!-- My Events -->
     <div id="mySection" class="section">
+      <div class="card">
+        <h3>My Events</h3>
+        <div id="myEventsContainer"></div>
+      </div>
+      <!-- Pending Join Requests -->
+      <div class="card" id="joinRequestsCard" style="display:none;">
+        <h3>Pending Join Requests</h3>
+        <div id="joinRequestsContainer">Loading...</div>
+      </div>
       <div class="card">
         <h3>Create Event</h3>
         <form id="createEventForm">
@@ -78,6 +803,10 @@
           <input id="lat" type="hidden">
           <input id="lon" type="hidden">
           <textarea id="description" placeholder="Description" rows="3"></textarea>
+          <label for="start_time">Start Time:</label>
+          <input id="start_time" type="datetime-local" required>
+          <label for="end_time">End Time:</label>
+          <input id="end_time" type="datetime-local" required>
           <button type="submit">Create Event</button>
         </form>
         <div id="map" style="height:300px; margin-top:10px;"></div>
@@ -99,7 +828,52 @@
   <!-- Notifications -->
   <div id="notificationsContainer"></div>
 
+  <!-- Chat Toggle Button -->
+  <button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
+
+  <!-- Chat Container -->
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+      <h4 id="chatTitle">Event Chats</h4>
+      <button class="chat-close" id="chatCloseBtn">&times;</button>
+    </div>
+    <div class="chat-groups-list" id="chatGroupsList" style="display: none;">
+      <!-- Chat groups will be populated here -->
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <p style="text-align: center; color: #9ca3af; padding: 20px;">Select an event to view chat</p>
+    </div>
+    <div class="chat-input-container" id="chatInputContainer" style="display: none;">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
+      <button class="chat-send-btn" id="chatSendBtn">Send</button>
+    </div>
+  </div>
+
   <script>
+    async function loadCurrentUser() {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("/api/me/", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      document.getElementById("currentUsername").innerText = data.username || "User";
+      
+      // Optionally set profile image in modal if available
+      if (data.profile_image) {
+        document.getElementById("modalProfilePreview").src = data.profile_image;
+      }
+    } catch (err) {
+      console.error("Failed to load user info:", err);
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", loadCurrentUser);
     const token = localStorage.getItem("access_token");
     if (!token) window.location.href = "/login";
 
@@ -171,12 +945,6 @@
       if (notif) notif.remove();
     }
 
-    // Example notifications
-    [
-      { id: 1, message: "John requested to join your Coffee Meetup" },
-      { id: 2, message: "Alice requested to join your Jog in Park" },
-    ].forEach(n => showNotification(n.message, n.id));
-
     const fetchEventsBtn = document.getElementById("fetchEventsBtn");
 
     fetchEventsBtn.onclick = async () => {
@@ -215,7 +983,8 @@
           }
 
           showNotification("Location updated successfully!", "location");
-          await fetchNearbyEvents();
+          const selectedDistance = parseInt(document.getElementById("distanceSelect").value);
+          await fetchNearbyEvents(selectedDistance);
         } catch (err) {
           console.error(err);
           showNotification("Error updating location or fetching events", "error");
@@ -230,41 +999,114 @@
       });
     };
 
-    async function fetchNearbyEvents() {
-      try {
+    async function fetchNearbyEvents(maxDistance = 70) {
+    try {
         let token = localStorage.getItem("access_token");
-        let res = await fetch("/api/nearby-events/", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(`/api/nearby-events/?max_distance=${maxDistance}`, { 
+            headers: { Authorization: `Bearer ${token}` } 
+        });
 
-        if (res.status === 401) {
-          const refreshed = await refreshAccessToken();
-          if (refreshed) {
-            token = localStorage.getItem("access_token");
-            res = await fetch("/api/nearby-events/", { headers: { Authorization: `Bearer ${token}` } });
-          }
+        if (!res.ok) { 
+            showNotification("Failed to fetch nearby events", "events"); 
+            return; 
         }
 
         const eventsContainer = document.getElementById("eventsContainer");
+        const eventsMapDiv = document.getElementById("eventsMap");
         eventsContainer.innerHTML = "";
-        if (res.ok) {
-          const data = await res.json();
-          const events = data.events || [];
-          if (events.length === 0) eventsContainer.innerHTML = "<p>No nearby events found.</p>";
-          else {
-            events.forEach(ev => {
-              const div = document.createElement("div");
-              div.className = "event-item";
-              div.innerHTML = `${ev.title} - ${ev.time || "N/A"} <button>Request to Join</button>`;
-              eventsContainer.appendChild(div);
+
+        // Initialize or get events map
+        if (!window.eventsMap) {
+            eventsMapDiv.style.display = "block";
+            const defaultLocation = { lat: 28.6139, lng: 77.2090 };
+            window.eventsMap = new google.maps.Map(eventsMapDiv, {
+                center: defaultLocation,
+                zoom: 12
             });
-          }
-          showNotification(`Fetched ${events.length} nearby events!`, "events");
-        } else showNotification("Failed to fetch nearby events", "events");
-      } catch (err) {
+        }
+
+        // Clear previous markers from the map
+        if (window.eventMarkers) {
+            window.eventMarkers.forEach(m => m.setMap(null));
+        }
+        window.eventMarkers = [];
+
+        const events = await res.json();
+        if (!events.length) { 
+            eventsContainer.innerHTML = "<p style='color: #9ca3af; text-align: center; padding: 20px;'>No nearby events found.</p>"; 
+            eventsMapDiv.style.display = "none";
+            return; 
+        }
+
+        const bounds = new google.maps.LatLngBounds();
+        let hasValidLocation = false;
+
+        events.forEach(event => {
+            // Create list item
+            const div = document.createElement("div");
+            div.className = "event-item";
+            div.innerHTML = `
+                <div>
+                    <strong>${event.title}</strong> - ${new Date(event.start_time).toLocaleString()}
+                    (${event.distance_km || 0} km)
+                </div>
+                <button>${event.join_status === "not_requested" ? "Request to Join" : event.join_status}</button>
+            `;
+            const button = div.querySelector("button");
+            button.onclick = async () => {
+                if (event.join_status !== "not_requested") return;
+
+                const joinRes = await fetch(`/api/join-request/${event.id}/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                });
+
+                if (joinRes.ok) { 
+                    button.innerText = "Requested"; 
+                    event.join_status = "requested"; 
+                    showNotification("Join request sent!", event.id);
+                } else {
+                    const err = await joinRes.json();
+                    showNotification("Failed: " + (err.message || "Unknown"), event.id);
+                }
+            };
+            eventsContainer.appendChild(div);
+
+            // Add marker on the map
+            if (event.lat && event.lon) {
+                const position = { lat: parseFloat(event.lat), lng: parseFloat(event.lon) };
+                const marker = new google.maps.Marker({
+                    position: position,
+                    map: window.eventsMap,
+                    title: event.title
+                });
+
+                bounds.extend(position);
+                hasValidLocation = true;
+
+                // Optional: show info window on click
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<strong>${event.title}</strong><br>${new Date(event.start_time).toLocaleString()}<br>${event.distance_km || 0} km away`
+                });
+                marker.addListener("click", () => infoWindow.open(window.eventsMap, marker));
+
+                // Store markers so we can clear them later
+                window.eventMarkers.push(marker);
+            }
+        });
+
+        // Fit map to show all markers
+        if (hasValidLocation && window.eventMarkers.length > 0) {
+            window.eventsMap.fitBounds(bounds);
+            if (window.eventMarkers.length === 1) {
+                window.eventsMap.setZoom(15);
+            }
+        }
+    } catch (err) {
         console.error(err);
         showNotification("Error fetching nearby events", "error");
-      }
     }
-
+}
     // Map Setup
     let map, marker, autocomplete;
 
@@ -298,10 +1140,76 @@
       console.log("Google Map initialized successfully");
     };
 
+    // Set default values for datetime inputs
+    function setDefaultDateTime() {
+      const now = new Date();
+      const startTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
+      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour after start
+      
+      // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+      const formatDateTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      };
+      
+      const startTimeInput = document.getElementById("start_time");
+      const endTimeInput = document.getElementById("end_time");
+      
+      if (startTimeInput && !startTimeInput.value) {
+        startTimeInput.value = formatDateTime(startTime);
+      }
+      if (endTimeInput && !endTimeInput.value) {
+        endTimeInput.value = formatDateTime(endTime);
+      }
+    }
+
+    // Set defaults when form is visible or page loads
+    window.addEventListener("DOMContentLoaded", () => {
+      setDefaultDateTime();
+      // Update end time when start time changes
+      document.getElementById("start_time")?.addEventListener("change", (e) => {
+        const startTime = new Date(e.target.value);
+        const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour after start
+        const formatDateTime = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          return `${year}-${month}-${day}T${hours}:${minutes}`;
+        };
+        const endTimeInput = document.getElementById("end_time");
+        if (endTimeInput && !endTimeInput.value) {
+          endTimeInput.value = formatDateTime(endTime);
+        }
+      });
+    });
+
     document.getElementById("createEventForm").addEventListener("submit", async e => {
       e.preventDefault();
       const token = localStorage.getItem("access_token");
       if (!token) return alert("Please log in first!");
+
+      const startTimeInput = document.getElementById("start_time").value;
+      const endTimeInput = document.getElementById("end_time").value;
+
+      if (!startTimeInput || !endTimeInput) {
+        alert("Please select both start and end times");
+        return;
+      }
+
+      // Convert datetime-local to ISO string
+      const startTime = new Date(startTimeInput).toISOString();
+      const endTime = new Date(endTimeInput).toISOString();
+
+      if (endTime <= startTime) {
+        alert("End time must be after start time");
+        return;
+      }
 
       const data = {
         title: document.getElementById("title").value,
@@ -309,7 +1217,8 @@
         location_name: document.getElementById("location_name").value,
         lat: parseFloat(document.getElementById("lat").value),
         lon: parseFloat(document.getElementById("lon").value),
-        end_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        start_time: startTime,
+        end_time: endTime,
       };
 
       try {
@@ -328,9 +1237,349 @@
         alert("Something went wrong while creating event!");
       }
     });
+    const myEventsContainer = document.getElementById("myEventsContainer");
+
+async function fetchMyEvents() {
+  myEventsContainer.innerHTML = "Loading...";
+  let token = localStorage.getItem("access_token");
+
+  try {
+    let res = await fetch("/api/my-events/", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      myEventsContainer.innerHTML = "Failed to fetch events.";
+      return;
+    }
+
+    const data = await res.json();
+    const events = data.events || [];
+
+    if (events.length === 0) {
+      myEventsContainer.innerHTML = "<p style='color: #9ca3af; text-align: center; padding: 20px;'>No events found.</p>";
+      return;
+    }
+
+    myEventsContainer.innerHTML = "";
+        events.forEach(e => {
+          const div = document.createElement("div");
+          div.className = "event-item";
+          div.innerHTML = `
+            ${e.title} - ${e.start_time || "N/A"} 
+            <span style="font-size:12px; color:#9ca3af">(${e.role})</span>
+          `;
+          myEventsContainer.appendChild(div);
+        });
+      } catch (err) {
+        console.error(err);
+        myEventsContainer.innerHTML = "Error fetching events.";
+      }
+    }
+
+    // Call on page load
+    window.addEventListener("DOMContentLoaded", fetchMyEvents);
+    // request here 
+    const joinRequestsCard = document.getElementById("joinRequestsCard");
+    const joinRequestsContainer = document.getElementById("joinRequestsContainer");
+
+    async function fetchJoinRequests() {
+      let token = localStorage.getItem("access_token");
+
+      try {
+        const res = await fetch("/api/my-events/", { // We'll use my-events and filter organizer requests
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const events = data.events || [];
+        const organizerEvents = events.filter(e => e.role === "organizer");
+
+        if (organizerEvents.length === 0) {
+          joinRequestsCard.style.display = "none";
+          return;
+        }
+
+        joinRequestsCard.style.display = "block";
+        joinRequestsContainer.innerHTML = "";
+
+        // Fetch pending requests for each event
+        for (const event of organizerEvents) {
+          const reqRes = await fetch(`/api/event-requests/${event.id}/pending/`, { // We'll need this route
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (!reqRes.ok) continue;
+          const requests = await reqRes.json(); // Assume array of {id, username}
+
+          requests.forEach(r => {
+            const div = document.createElement("div");
+            div.className = "event-item";
+            div.innerHTML = `
+              ${r.username} requested to join "${event.title}"
+              <span>
+                <button class="accept-btn">Accept</button>
+                <button class="reject-btn">Reject</button>
+              </span>
+            `;
+
+            const acceptBtn = div.querySelector(".accept-btn");
+            const rejectBtn = div.querySelector(".reject-btn");
+
+            acceptBtn.onclick = () => respondJoinRequest(r.id, "accept", div);
+            rejectBtn.onclick = () => respondJoinRequest(r.id, "reject", div);
+
+            joinRequestsContainer.appendChild(div);
+          });
+        }
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function respondJoinRequest(requestId, action, div) {
+      let token = localStorage.getItem("access_token");
+
+      try {
+        const res = await fetch(`/api/respond-join-request/${requestId}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ action })
+        });
+
+        if (res.ok) {
+          div.remove();
+          showNotification(`Request ${action}ed successfully!`, requestId);
+          await fetchMyEvents(); // Refresh MyEvents to reflect new participant
+        } else {
+          const err = await res.json();
+          showNotification(`Failed: ${err.detail || "Unknown error"}`, requestId);
+        }
+      } catch (err) {
+        console.error(err);
+        showNotification("Error responding to request", requestId);
+      }
+    }
+
+    // Call on page load after fetching MyEvents
+    window.addEventListener("DOMContentLoaded", () => {
+      fetchMyEvents();
+      fetchJoinRequests();
+      loadChatGroups();
+    });
+
+    // Chat functionality
+    let currentChatGroupId = null;
+    let chatPollInterval = null;
+    const currentUserId = parseInt(localStorage.getItem("user_id") || "0");
+
+    const chatToggleBtn = document.getElementById("chatToggleBtn");
+    const chatContainer = document.getElementById("chatContainer");
+    const chatCloseBtn = document.getElementById("chatCloseBtn");
+    const chatGroupsList = document.getElementById("chatGroupsList");
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const chatSendBtn = document.getElementById("chatSendBtn");
+    const chatInputContainer = document.getElementById("chatInputContainer");
+    const chatTitle = document.getElementById("chatTitle");
+
+    chatToggleBtn.onclick = () => {
+      chatContainer.classList.toggle("active");
+      if (chatContainer.classList.contains("active")) {
+        loadChatGroups();
+      }
+    };
+
+    chatCloseBtn.onclick = () => {
+      chatContainer.classList.remove("active");
+      stopChatPolling();
+    };
+
+    async function loadChatGroups() {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const res = await fetch("/api/chat/groups/", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) return;
+
+        const groups = await res.json();
+        
+        if (groups.length === 0) {
+          chatGroupsList.innerHTML = "<p style='color: #9ca3af; padding: 20px; text-align: center;'>No active event chats</p>";
+          chatGroupsList.style.display = "block";
+          chatMessages.innerHTML = "<p style='text-align: center; color: #9ca3af; padding: 20px;'>No active event chats</p>";
+          chatInputContainer.style.display = "none";
+          return;
+        }
+
+        chatGroupsList.innerHTML = "";
+        groups.forEach(group => {
+          const div = document.createElement("div");
+          div.className = "chat-group-item";
+          div.innerHTML = `
+            <h5>${group.event_title}</h5>
+            <p>${group.last_message ? `${group.last_message.user}: ${group.last_message.message.substring(0, 30)}...` : "No messages yet"}</p>
+          `;
+          div.onclick = (e) => openChatGroup(group.id, group.event_title, e.currentTarget);
+          chatGroupsList.appendChild(div);
+        });
+
+        chatGroupsList.style.display = groups.length > 1 ? "block" : "none";
+        
+        // Auto-open first chat if only one group
+        if (groups.length === 1) {
+          const firstItem = chatGroupsList.querySelector(".chat-group-item");
+          openChatGroup(groups[0].id, groups[0].event_title, firstItem);
+        }
+      } catch (err) {
+        console.error("Failed to load chat groups:", err);
+      }
+    }
+
+    async function openChatGroup(chatGroupId, eventTitle, clickedElement) {
+      currentChatGroupId = chatGroupId;
+      chatTitle.innerText = eventTitle;
+      
+      // Update active state
+      document.querySelectorAll(".chat-group-item").forEach(item => {
+        item.classList.remove("active");
+      });
+      if (clickedElement) {
+        clickedElement.classList.add("active");
+      }
+
+      chatInputContainer.style.display = "flex";
+      await loadChatMessages(chatGroupId);
+      startChatPolling();
+    }
+
+    async function loadChatMessages(chatGroupId) {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const res = await fetch(`/api/chat/${chatGroupId}/messages/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          chatMessages.innerHTML = "<p style='color: #ef4444; padding: 20px;'>Failed to load messages</p>";
+          return;
+        }
+
+        const messages = await res.json();
+        chatMessages.innerHTML = "";
+
+        if (messages.length === 0) {
+          chatMessages.innerHTML = "<p style='text-align: center; color: #9ca3af; padding: 20px;'>No messages yet. Start the conversation!</p>";
+          return;
+        }
+
+        messages.forEach(msg => {
+          const isOwn = msg.user_id === currentUserId;
+          const messageDiv = document.createElement("div");
+          messageDiv.className = `chat-message ${isOwn ? "own" : "other"}`;
+          messageDiv.innerHTML = `
+            <span class="chat-message-user">${msg.user}</span>
+            <div class="chat-message-bubble">${msg.message}</div>
+          `;
+          chatMessages.appendChild(messageDiv);
+        });
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      } catch (err) {
+        console.error("Failed to load messages:", err);
+      }
+    }
+
+    async function sendMessage() {
+      if (!currentChatGroupId) return;
+      
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const res = await fetch(`/api/chat/${currentChatGroupId}/send/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ message })
+        });
+
+        if (res.ok) {
+          chatInput.value = "";
+          await loadChatMessages(currentChatGroupId);
+        } else {
+          const err = await res.json();
+          showNotification("Failed to send message: " + (err.error || "Unknown"), "chat-error");
+        }
+      } catch (err) {
+        console.error("Failed to send message:", err);
+        showNotification("Failed to send message", "chat-error");
+      }
+    }
+
+    chatSendBtn.onclick = sendMessage;
+    chatInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    function startChatPolling() {
+      stopChatPolling();
+      chatPollInterval = setInterval(() => {
+        if (currentChatGroupId) {
+          loadChatMessages(currentChatGroupId);
+        }
+      }, 3000); // Poll every 3 seconds
+    }
+
+    function stopChatPolling() {
+      if (chatPollInterval) {
+        clearInterval(chatPollInterval);
+        chatPollInterval = null;
+      }
+    }
+
+    // Get current user ID on load
+    async function getCurrentUserId() {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const res = await fetch("/api/me/", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem("user_id", data.id || "0");
+        }
+      } catch (err) {
+        console.error("Failed to get user ID:", err);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", getCurrentUserId);
+
   </script>
 
   <!-- Google Maps API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5X9GtsfyVKhr5j76YmL85-h0s2dHbhHQ&libraries=places&callback=initMap" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCNqVRvoc37x8eUhYr2Cv4oY1UA6PIKeJM&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>

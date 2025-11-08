@@ -26,7 +26,7 @@ class RegisterView(APIView):
             store_otp(email, otp, password)
             send_vmail(otp, email)
 
-            return Response({"message": "OTP sent to your email. Valid for 30 seconds."}, status=status.HTTP_200_OK)
+            return Response({"message": "OTP sent to your email. Valid for 300 seconds. (5 min)"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -96,7 +96,9 @@ class UserView(APIView):
     def get(self, request):
         user = request.user
         return Response({
+            "id": user.id,
             "username": user.username,
             "email": user.email,
             "location": getattr(user, "location", None),
+            "profile_image": user.profile_picture.url if user.profile_picture else None,
         })
