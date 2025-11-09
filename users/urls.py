@@ -10,6 +10,8 @@ from .event_views import (
     PendingJoinRequestsView
 )
 from .chat_views import GetChatGroupsView, GetChatMessagesView, SendChatMessageView
+from .profile_views import UpdateProfileView
+from .oauth_views import GoogleOAuthView, GoogleOAuthCallbackView
 
 urlpatterns = [
     # User Auth
@@ -34,4 +36,11 @@ urlpatterns = [
     path('chat/groups/', GetChatGroupsView.as_view(), name='chat-groups'),
     path('chat/<int:chat_group_id>/messages/', GetChatMessagesView.as_view(), name='chat-messages'),
     path('chat/<int:chat_group_id>/send/', SendChatMessageView.as_view(), name='send-message'),
+    
+    # Profile
+    path('update-profile/', UpdateProfileView.as_view(), name='update-profile'),
+    
+    # OAuth
+    path('oauth/google/', GoogleOAuthView.as_view(), name='google-oauth'),
+    path('oauth/google/callback/', GoogleOAuthCallbackView.as_view(), name='google-oauth-callback'),
 ]

@@ -149,3 +149,9 @@ SIMPLE_JWT = {
 CRON_CLASSES = [
     "users.cron.DeleteOldEventsCronJob",
 ]
+
+# OAuth Configuration
+# Get these from Google Cloud Console: https://console.cloud.google.com/
+# Create OAuth 2.0 Client ID credentials
+GOOGLE_OAUTH2_CLIENT_ID = 'xsQKXwkV1rhInDJag37jf3XIzXEe7THJ'  # Set your Google Client ID
+GOOGLE_OAUTH2_CLIENT_SECRET = '4AOvZ25te8a2MgTMDwtrn2FEALNMSv-DGzEMqw-mmW_ySBYSOfuXczue8e8atMg1'  # Set your Google Client Secret

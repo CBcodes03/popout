@@ -28,3 +28,11 @@ def verify_page(request):
 
 def home_page(request):
     return render(request, "home.html")
+
+@never_cache
+def oauth_callback_page(request):
+    response = render(request, "oauth_callback.html")
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response

@@ -100,5 +100,6 @@ class UserView(APIView):
             "username": user.username,
             "email": user.email,
             "location": getattr(user, "location", None),
+            "bio": getattr(user, "bio", None) or "",
             "profile_image": user.profile_picture.url if user.profile_picture else None,
         })

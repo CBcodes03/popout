@@ -83,6 +83,13 @@ class EventJoinRequestView(generics.CreateAPIView):
         if event.organizer == user:
             return Response({"error": "You can't join your own event"}, status=400)
 
+        # Check if event has reached max participants
+        if event.participants_count >= event.max_participants:
+            return Response(
+                {"error": f"Event has reached maximum participants ({event.max_participants})"},
+                status=400
+            )
+
         if is_user_busy(user, new_event_start=event.start_time, new_event_end=event.end_time):
             return Response(
                 {"error": "You are already part of an overlapping event. Cannot join this event."},
@@ -115,6 +122,14 @@ class RespondJoinRequestView(APIView):
 
         if action not in ["accept", "reject"]:
             return Response({"error": "Invalid action"}, status=400)
+
+        # Check max participants before accepting
+        if action == "accept":
+            if join_request.event.participants_count >= join_request.event.max_participants:
+                return Response(
+                    {"error": f"Event has reached maximum participants ({join_request.event.max_participants})"},
+                    status=400
+                )
 
         join_request.status = "accepted" if action == "accept" else "rejected"
         join_request.responded_at = timezone.now()
@@ -229,6 +244,12 @@ class PendingJoinRequestsView(APIView):
             return Response({"detail": "Event not found or not authorized"}, status=404)
 
         pending_requests = EventJoinRequest.objects.filter(event=event, status="pending")
-        data = [{"id": r.id, "username": r.user.username} for r in pending_requests]
+        data = [{
+            "id": r.id,
+            "username": r.user.username,
+            "user_id": r.user.id,
+            "bio": r.user.bio or "",
+            "profile_picture": r.user.profile_picture.url if r.user.profile_picture else None
+        } for r in pending_requests]
 
         return Response(data)

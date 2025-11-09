@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import register_page, verify_page, login_page, home_page
+from .views import register_page, verify_page, login_page, home_page, oauth_callback_page
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,6 +28,7 @@ urlpatterns = [
     path('login', login_page, name='login_page'),
     path('verify_otp', verify_page, name='verify_page'),
     path('register', register_page, name='register_page'),
+    path('oauth/callback', oauth_callback_page, name='oauth_callback_page'),
 
     # API routes
     path('api/', include('users.urls')),

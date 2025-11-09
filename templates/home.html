@@ -807,6 +807,8 @@
           <input id="start_time" type="datetime-local" required>
           <label for="end_time">End Time:</label>
           <input id="end_time" type="datetime-local" required>
+          <label for="max_participants">Max Participants:</label>
+          <input id="max_participants" type="number" min="1" max="100" value="10" required>
           <button type="submit">Create Event</button>
         </form>
         <div id="map" style="height:300px; margin-top:10px;"></div>
@@ -816,12 +818,29 @@
 
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
-    <div class="modal">
+    <div class="modal" style="max-width: 500px;">
       <span class="close-modal" id="closeModal">&times;</span>
       <h3>Account Settings</h3>
-      <img src="https://via.placeholder.com/80" id="modalProfilePreview">
-      <button onclick="alert('Viewing profile!')">View Profile</button>
-      <button onclick="logout()">Logout</button>
+      <div style="text-align: center; margin: 20px 0;">
+        <img src="https://via.placeholder.com/80" id="modalProfilePreview" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(99, 102, 241, 0.3); cursor: pointer;" onclick="document.getElementById('profilePictureInput').click()">
+        <input type="file" id="profilePictureInput" accept="image/*" style="display: none;" onchange="handleProfilePictureChange(event)">
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 8px;">Click image to change</p>
+      </div>
+      <label for="profileBio" style="display: block; margin-top: 16px; color: #9ca3af; font-size: 14px;">Bio:</label>
+      <textarea id="profileBio" placeholder="Tell us about yourself..." rows="4" style="width: 100%; padding: 12px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.1); background: rgba(30, 30, 40, 0.8); color: #f3f4f6; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
+      <button id="saveProfileBtn" style="width: 100%; margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;">Save Profile</button>
+      <button onclick="logout()" style="width: 100%; margin-top: 8px; padding: 12px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;">Logout</button>
+    </div>
+  </div>
+
+  <!-- Event Details Modal -->
+  <div class="modal-overlay" id="eventDetailsModal">
+    <div class="modal" style="max-width: 600px;">
+      <span class="close-modal" id="closeEventModal">&times;</span>
+      <h3 id="eventDetailsTitle">Event Details</h3>
+      <div id="eventDetailsContent" style="text-align: left; color: #f3f4f6;">
+        <!-- Event details will be populated here -->
+      </div>
     </div>
   </div>
 
@@ -948,7 +967,10 @@
     const fetchEventsBtn = document.getElementById("fetchEventsBtn");
 
     fetchEventsBtn.onclick = async () => {
-      if (!navigator.geolocation) return alert("Geolocation not supported.");
+      if (!navigator.geolocation) {
+        showNotification("❌ Geolocation is not supported by your browser", "location-error");
+        return;
+      }
 
       fetchEventsBtn.disabled = true;
       fetchEventsBtn.innerText = "Fetching location...";
@@ -993,7 +1015,7 @@
           fetchEventsBtn.innerText = "Fetch Nearby Events";
         }
       }, err => {
-        alert("Failed to get location: " + err.message);
+        showNotification("❌ Failed to get location: " + err.message, "location-error");
         fetchEventsBtn.disabled = false;
         fetchEventsBtn.innerText = "Fetch Nearby Events";
       });
@@ -1122,7 +1144,10 @@
 
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
-        if (!place.geometry) { alert("No details for this location."); return; }
+        if (!place.geometry) { 
+          showNotification("❌ No details found for this location. Please try another location.", "location-error");
+          return; 
+        }
 
         if (place.geometry.viewport) map.fitBounds(place.geometry.viewport);
         else { map.setCenter(place.geometry.location); map.setZoom(15); }
@@ -1192,13 +1217,16 @@
     document.getElementById("createEventForm").addEventListener("submit", async e => {
       e.preventDefault();
       const token = localStorage.getItem("access_token");
-      if (!token) return alert("Please log in first!");
+      if (!token) {
+        showNotification("❌ Please log in first!", "auth-error");
+        return;
+      }
 
       const startTimeInput = document.getElementById("start_time").value;
       const endTimeInput = document.getElementById("end_time").value;
 
       if (!startTimeInput || !endTimeInput) {
-        alert("Please select both start and end times");
+        showNotification("❌ Please select both start and end times", "validation-error");
         return;
       }
 
@@ -1207,7 +1235,7 @@
       const endTime = new Date(endTimeInput).toISOString();
 
       if (endTime <= startTime) {
-        alert("End time must be after start time");
+        showNotification("❌ End time must be after start time", "validation-error");
         return;
       }
 
@@ -1219,6 +1247,7 @@
         lon: parseFloat(document.getElementById("lon").value),
         start_time: startTime,
         end_time: endTime,
+        max_participants: parseInt(document.getElementById("max_participants").value) || 10,
       };
 
       try {
@@ -1229,12 +1258,26 @@
         });
         const result = await res.json();
         if (res.ok) {
-          alert("✅ Event created successfully!");
+          showNotification("✅ Event created successfully!", "event-created");
           document.getElementById("createEventForm").reset();
-        } else alert("❌ " + JSON.stringify(result));
+          await fetchMyEvents(); // Refresh my events list
+        } else {
+          // Extract user-friendly error message
+          let errorMessage = "Failed to create event";
+          if (result.error) {
+            errorMessage = result.error;
+          } else if (result.detail) {
+            errorMessage = result.detail;
+          } else if (typeof result === 'string') {
+            errorMessage = result;
+          } else if (result.message) {
+            errorMessage = result.message;
+          }
+          showNotification("❌ " + errorMessage, "event-error");
+        }
       } catch (err) {
         console.error("Error creating event:", err);
-        alert("Something went wrong while creating event!");
+        showNotification("❌ Something went wrong while creating event. Please try again.", "event-error");
       }
     });
     const myEventsContainer = document.getElementById("myEventsContainer");
@@ -1265,10 +1308,30 @@ async function fetchMyEvents() {
         events.forEach(e => {
           const div = document.createElement("div");
           div.className = "event-item";
+          div.style.cursor = "pointer";
+          
+          // Add maps button if coordinates are available
+          let mapsButtonHtml = "";
+          if (e.lat && e.lon) {
+            const mapsUrl = `https://www.google.com/maps?q=${e.lat},${e.lon}`;
+            mapsButtonHtml = `
+              <a href="${mapsUrl}" target="_blank" onclick="event.stopPropagation();" style="padding: 6px 12px; background: rgba(99, 102, 241, 0.2); color: #818cf8; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: 500; transition: all 0.3s; margin-left: 8px; display: inline-flex; align-items: center; gap: 4px;">
+                📍 Maps
+              </a>
+            `;
+          }
+          
           div.innerHTML = `
-            ${e.title} - ${e.start_time || "N/A"} 
-            <span style="font-size:12px; color:#9ca3af">(${e.role})</span>
+            <div style="flex: 1;">
+              <strong style="color: #f3f4f6;">${e.title}</strong>
+              <div style="font-size: 12px; color: #9ca3af; margin-top: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <span>${e.start_time ? new Date(e.start_time).toLocaleString() : "N/A"}</span>
+                <span style="color: #6b7280;">(${e.role})</span>
+                ${mapsButtonHtml}
+              </div>
+            </div>
           `;
+          div.onclick = () => showEventDetails(e);
           myEventsContainer.appendChild(div);
         });
       } catch (err) {
@@ -1317,8 +1380,16 @@ async function fetchMyEvents() {
           requests.forEach(r => {
             const div = document.createElement("div");
             div.className = "event-item";
+            div.style.display = "flex";
+            div.style.alignItems = "center";
+            div.style.gap = "12px";
             div.innerHTML = `
-              ${r.username} requested to join "${event.title}"
+              <img src="${r.profile_picture || 'https://via.placeholder.com/40'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(99, 102, 241, 0.3);">
+              <div style="flex: 1;">
+                <div style="font-weight: 600; color: #f3f4f6; margin-bottom: 4px;">${r.username}</div>
+                <div style="font-size: 12px; color: #9ca3af;">${r.bio || "No bio"}</div>
+                <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Requested to join "${event.title}"</div>
+              </div>
               <span>
                 <button class="accept-btn">Accept</button>
                 <button class="reject-btn">Reject</button>
@@ -1367,57 +1438,108 @@ async function fetchMyEvents() {
       }
     }
 
+    // Chat functionality
+    let currentChatGroupId = null;
+    let chatPollInterval = null;
+    
+    function getCurrentUserId() {
+      return parseInt(localStorage.getItem("user_id") || "0");
+    }
+
+    // Initialize chat elements
+    let chatToggleBtn, chatContainer, chatCloseBtn, chatGroupsList, chatMessages, chatInput, chatSendBtn, chatInputContainer, chatTitle;
+
+    function initChatElements() {
+      chatToggleBtn = document.getElementById("chatToggleBtn");
+      chatContainer = document.getElementById("chatContainer");
+      chatCloseBtn = document.getElementById("chatCloseBtn");
+      chatGroupsList = document.getElementById("chatGroupsList");
+      chatMessages = document.getElementById("chatMessages");
+      chatInput = document.getElementById("chatInput");
+      chatSendBtn = document.getElementById("chatSendBtn");
+      chatInputContainer = document.getElementById("chatInputContainer");
+      chatTitle = document.getElementById("chatTitle");
+
+      if (!chatToggleBtn || !chatContainer) {
+        console.error("Chat elements not found!");
+        return false;
+      }
+
+      chatToggleBtn.onclick = () => {
+        chatContainer.classList.toggle("active");
+        if (chatContainer.classList.contains("active")) {
+          loadChatGroups();
+        } else {
+          stopChatPolling();
+        }
+      };
+
+      if (chatCloseBtn) {
+        chatCloseBtn.onclick = () => {
+          chatContainer.classList.remove("active");
+          stopChatPolling();
+        };
+      }
+
+      // Send message functionality
+      if (chatSendBtn && chatInput) {
+        chatSendBtn.onclick = () => sendMessage();
+        chatInput.onkeypress = (e) => {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        };
+      }
+
+      return true;
+    }
+
     // Call on page load after fetching MyEvents
     window.addEventListener("DOMContentLoaded", () => {
       fetchMyEvents();
       fetchJoinRequests();
-      loadChatGroups();
+      
+      // Initialize chat elements first
+      if (initChatElements()) {
+        // Don't auto-load chat groups on page load, only when button is clicked
+        console.log("Chat initialized successfully");
+      } else {
+        console.error("Failed to initialize chat");
+      }
     });
 
-    // Chat functionality
-    let currentChatGroupId = null;
-    let chatPollInterval = null;
-    const currentUserId = parseInt(localStorage.getItem("user_id") || "0");
-
-    const chatToggleBtn = document.getElementById("chatToggleBtn");
-    const chatContainer = document.getElementById("chatContainer");
-    const chatCloseBtn = document.getElementById("chatCloseBtn");
-    const chatGroupsList = document.getElementById("chatGroupsList");
-    const chatMessages = document.getElementById("chatMessages");
-    const chatInput = document.getElementById("chatInput");
-    const chatSendBtn = document.getElementById("chatSendBtn");
-    const chatInputContainer = document.getElementById("chatInputContainer");
-    const chatTitle = document.getElementById("chatTitle");
-
-    chatToggleBtn.onclick = () => {
-      chatContainer.classList.toggle("active");
-      if (chatContainer.classList.contains("active")) {
-        loadChatGroups();
-      }
-    };
-
-    chatCloseBtn.onclick = () => {
-      chatContainer.classList.remove("active");
-      stopChatPolling();
-    };
-
     async function loadChatGroups() {
+      if (!chatGroupsList || !chatMessages || !chatInputContainer) {
+        console.error("Chat elements not initialized");
+        return;
+      }
+
       const token = localStorage.getItem("access_token");
-      if (!token) return;
+      if (!token) {
+        chatMessages.innerHTML = "<p style='color: #ef4444; padding: 20px; text-align: center;'>Please log in to view chats</p>";
+        return;
+      }
 
       try {
+        chatMessages.innerHTML = "<p style='text-align: center; color: #9ca3af; padding: 20px;'>Loading chats...</p>";
+        
         const res = await fetch("/api/chat/groups/", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({ error: "Failed to load chats" }));
+          chatMessages.innerHTML = `<p style='color: #ef4444; padding: 20px; text-align: center;'>Error: ${error.error || "Failed to load chats"}</p>`;
+          console.error("Failed to load chat groups:", res.status, error);
+          return;
+        }
 
         const groups = await res.json();
         
         if (groups.length === 0) {
           chatGroupsList.innerHTML = "<p style='color: #9ca3af; padding: 20px; text-align: center;'>No active event chats</p>";
           chatGroupsList.style.display = "block";
-          chatMessages.innerHTML = "<p style='text-align: center; color: #9ca3af; padding: 20px;'>No active event chats</p>";
+          chatMessages.innerHTML = "<p style='text-align: center; color: #9ca3af; padding: 20px;'>You don't have any active event chats. Create or join an event to start chatting!</p>";
           chatInputContainer.style.display = "none";
           return;
         }
@@ -1439,14 +1561,25 @@ async function fetchMyEvents() {
         // Auto-open first chat if only one group
         if (groups.length === 1) {
           const firstItem = chatGroupsList.querySelector(".chat-group-item");
-          openChatGroup(groups[0].id, groups[0].event_title, firstItem);
+          if (firstItem) {
+            openChatGroup(groups[0].id, groups[0].event_title, firstItem);
+          }
+        } else {
+          chatMessages.innerHTML = "<p style='text-align: center; color: #9ca3af; padding: 20px;'>Select an event to view chat</p>";
+          chatInputContainer.style.display = "none";
         }
       } catch (err) {
         console.error("Failed to load chat groups:", err);
+        chatMessages.innerHTML = "<p style='color: #ef4444; padding: 20px; text-align: center;'>Error loading chats. Please try again.</p>";
       }
     }
 
     async function openChatGroup(chatGroupId, eventTitle, clickedElement) {
+      if (!chatTitle || !chatInputContainer) {
+        console.error("Chat elements not initialized");
+        return;
+      }
+
       currentChatGroupId = chatGroupId;
       chatTitle.innerText = eventTitle;
       
@@ -1464,8 +1597,16 @@ async function fetchMyEvents() {
     }
 
     async function loadChatMessages(chatGroupId) {
+      if (!chatMessages) {
+        console.error("Chat messages element not initialized");
+        return;
+      }
+
       const token = localStorage.getItem("access_token");
-      if (!token) return;
+      if (!token) {
+        chatMessages.innerHTML = "<p style='color: #ef4444; padding: 20px;'>Please log in to view messages</p>";
+        return;
+      }
 
       try {
         const res = await fetch(`/api/chat/${chatGroupId}/messages/`, {
@@ -1473,7 +1614,9 @@ async function fetchMyEvents() {
         });
 
         if (!res.ok) {
-          chatMessages.innerHTML = "<p style='color: #ef4444; padding: 20px;'>Failed to load messages</p>";
+          const error = await res.json().catch(() => ({ error: "Failed to load messages" }));
+          chatMessages.innerHTML = `<p style='color: #ef4444; padding: 20px;'>Error: ${error.error || "Failed to load messages"}</p>`;
+          console.error("Failed to load messages:", res.status, error);
           return;
         }
 
@@ -1486,7 +1629,7 @@ async function fetchMyEvents() {
         }
 
         messages.forEach(msg => {
-          const isOwn = msg.user_id === currentUserId;
+          const isOwn = msg.user_id === getCurrentUserId();
           const messageDiv = document.createElement("div");
           messageDiv.className = `chat-message ${isOwn ? "own" : "other"}`;
           messageDiv.innerHTML = `
@@ -1503,13 +1646,19 @@ async function fetchMyEvents() {
     }
 
     async function sendMessage() {
-      if (!currentChatGroupId) return;
+      if (!currentChatGroupId || !chatInput) {
+        console.error("Chat not initialized or no active chat group");
+        return;
+      }
       
       const message = chatInput.value.trim();
       if (!message) return;
 
       const token = localStorage.getItem("access_token");
-      if (!token) return;
+      if (!token) {
+        showNotification("Please log in to send messages", "chat-error");
+        return;
+      }
 
       try {
         const res = await fetch(`/api/chat/${currentChatGroupId}/send/`, {
@@ -1534,13 +1683,6 @@ async function fetchMyEvents() {
       }
     }
 
-    chatSendBtn.onclick = sendMessage;
-    chatInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        sendMessage();
-      }
-    });
-
     function startChatPolling() {
       stopChatPolling();
       chatPollInterval = setInterval(() => {
@@ -1558,7 +1700,7 @@ async function fetchMyEvents() {
     }
 
     // Get current user ID on load
-    async function getCurrentUserId() {
+    async function fetchAndStoreUserId() {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
@@ -1575,7 +1717,147 @@ async function fetchMyEvents() {
       }
     }
 
-    window.addEventListener("DOMContentLoaded", getCurrentUserId);
+    window.addEventListener("DOMContentLoaded", fetchAndStoreUserId);
+
+    // Profile editing functionality
+    let profilePictureBase64 = null;
+
+    async function loadProfileData() {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const res = await fetch("/api/me/", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("profileBio").value = data.bio || "";
+          if (data.profile_image) {
+            document.getElementById("modalProfilePreview").src = data.profile_image;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      }
+    }
+
+    function handleProfilePictureChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        profilePictureBase64 = e.target.result;
+        document.getElementById("modalProfilePreview").src = profilePictureBase64;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById("saveProfileBtn").onclick = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      const bio = document.getElementById("profileBio").value;
+      const data = { bio };
+
+      if (profilePictureBase64) {
+        data.profile_picture = profilePictureBase64;
+      }
+
+      try {
+        const res = await fetch("/api/update-profile/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          showNotification("Profile updated successfully!", "profile");
+          settingsModal.classList.remove("active");
+          profilePictureBase64 = null;
+          await loadCurrentUser(); // Refresh user info
+        } else {
+          const err = await res.json();
+          showNotification("Failed to update profile: " + (err.error || "Unknown"), "profile-error");
+        }
+      } catch (err) {
+        console.error("Failed to update profile:", err);
+        showNotification("Failed to update profile", "profile-error");
+      }
+    };
+
+    // Event details popup
+    async function showEventDetails(event) {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        // Fetch full event details
+        const res = await fetch(`/api/my-events/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const fullEvent = data.events.find(e => e.id === event.id);
+
+        if (!fullEvent) {
+          showNotification("Event not found", "event-error");
+          return;
+        }
+
+        document.getElementById("eventDetailsTitle").innerText = fullEvent.title;
+        
+        const content = document.getElementById("eventDetailsContent");
+        
+        // Create maps URL
+        let mapsButton = "";
+        if (fullEvent.lat && fullEvent.lon) {
+          const mapsUrl = `https://www.google.com/maps?q=${fullEvent.lat},${fullEvent.lon}`;
+          mapsButton = `
+            <a href="${mapsUrl}" target="_blank" style="display: inline-block; margin-top: 12px; padding: 10px 20px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; transition: all 0.3s; text-align: center;">
+              📍 Open in Maps
+            </a>
+          `;
+        }
+        
+        content.innerHTML = `
+          <div style="margin-bottom: 20px;">
+            <p style="margin: 8px 0;"><strong>Description:</strong> ${fullEvent.description || "No description"}</p>
+            <p style="margin: 8px 0;"><strong>Location:</strong> ${fullEvent.location_name}</p>
+            ${mapsButton}
+            <p style="margin: 8px 0; margin-top: 16px;"><strong>Start Time:</strong> ${fullEvent.start_time ? new Date(fullEvent.start_time).toLocaleString() : "N/A"}</p>
+            <p style="margin: 8px 0;"><strong>End Time:</strong> ${fullEvent.end_time ? new Date(fullEvent.end_time).toLocaleString() : "N/A"}</p>
+            <p style="margin: 8px 0;"><strong>Max Participants:</strong> ${fullEvent.max_participants || 10}</p>
+            <p style="margin: 8px 0;"><strong>Your Role:</strong> <span style="text-transform: capitalize; color: #818cf8;">${fullEvent.role || "participant"}</span></p>
+            <p style="margin: 8px 0;"><strong>Status:</strong> <span style="color: ${new Date(fullEvent.end_time) > new Date() ? '#10b981' : '#ef4444'}">${new Date(fullEvent.end_time) > new Date() ? 'Active' : 'Ended'}</span></p>
+          </div>
+        `;
+
+        eventDetailsModal.classList.add("active");
+      } catch (err) {
+        console.error("Failed to load event details:", err);
+        showNotification("Failed to load event details", "event-error");
+      }
+    }
+
+    // Update settings modal handlers
+    const originalSettingsClick = settingsBtn.onclick;
+    settingsBtn.onclick = () => {
+      settingsModal.classList.add("active");
+      loadProfileData();
+    };
+
+    const eventDetailsModal = document.getElementById("eventDetailsModal");
+    const closeEventModal = document.getElementById("closeEventModal");
+    if (closeEventModal) {
+      closeEventModal.onclick = () => eventDetailsModal.classList.remove("active");
+    }
+    if (eventDetailsModal) {
+      eventDetailsModal.onclick = (e) => { if (e.target === eventDetailsModal) eventDetailsModal.classList.remove("active"); };
+    }
 
   </script>
 
