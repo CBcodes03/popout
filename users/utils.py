@@ -18,7 +18,7 @@ def send_vmail(otp, emailid):
 
     s = smtplib.SMTP('smtp.gmail.com', 587)
     s.starttls()
-    s.login("cbblogs58@gmail.com", "orhn nagd xhpc swsq")
+    s.login("cbblogs58@gmail.com", "app passowrd")
     s.sendmail(from_addr="cbblogs58@gmail.com", to_addrs=emailid, msg=message.as_string())
     s.quit()
 
